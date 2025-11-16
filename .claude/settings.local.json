@@ -17,7 +17,10 @@
       "Bash(log show --predicate 'process == \"\"\"\"Agilo For Her\"\"\"\"' --last 1m)",
       "Bash(timeout 10 xcodebuild:*)",
       "Bash(git push:*)",
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "Bash(timeout 60 xcodebuild:*)",
+      "Bash(tree:*)",
+      "Bash(timeout 120 xcodebuild build:*)"
     ],
     "deny": [],
     "ask": []

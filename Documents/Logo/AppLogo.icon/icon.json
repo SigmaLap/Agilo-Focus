@@ -1,9 +1,23 @@
 {
   "fill" : {
-    "automatic-gradient" : "extended-gray:1.00000,1.00000"
+    "linear-gradient" : [
+      "extended-gray:0.25000,1.00000",
+      "extended-gray:0.00000,1.00000"
+    ],
+    "orientation" : {
+      "start" : {
+        "x" : 0.5,
+        "y" : 1
+      },
+      "stop" : {
+        "x" : 0.5,
+        "y" : 0.3
+      }
+    }
   },
   "groups" : [
     {
+      "blend-mode" : "normal",
       "blur-material" : 0.5,
       "layers" : [
         {
@@ -15,7 +29,19 @@
             }
           ],
           "image-name" : "generated-image-5 copy 3.png",
-          "name" : "generated-image-5 copy 3"
+          "name" : "generated-image-5 copy 3",
+          "position-specializations" : [
+            {
+              "idiom" : "square",
+              "value" : {
+                "scale" : 1.25,
+                "translation-in-points" : [
+                  31.609375,
+                  -44.9765625
+                ]
+              }
+            }
+          ]
         }
       ],
       "shadow" : {

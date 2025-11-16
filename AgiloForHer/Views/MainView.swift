@@ -17,11 +17,11 @@ struct MainView: View {
      }
     }
     
-    Tab("Today", systemImage: todayNumberSymbol) {
-     NavigationStack{
-      CycleView()
-     }
-    }
+//    Tab("Today", systemImage: todayNumberSymbol) {
+//     NavigationStack{
+//      TodayView()
+//     }
+//    }
     
    
     Tab {
@@ -36,14 +36,11 @@ struct MainView: View {
      }
     }
     
-   
-   
-    
-    Tab("Me", systemImage: "mouth") {
-     NavigationStack{
-      MeView()
-     }
-    }
+//    Tab("Me", systemImage: "mouth") {
+//     NavigationStack{
+//      MeView()
+//     }
+//    }
 
     Tab(role: .search){
      NavigationStack{

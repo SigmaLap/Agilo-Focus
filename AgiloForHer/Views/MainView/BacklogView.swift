@@ -114,48 +114,82 @@ struct BacklogItem: View {
  let priority: String
  let dueDate: String
  let color: Color
- 
+
+ @State private var isCompleted: Bool = false
+ @State private var showConfetti: Bool = false
+
  var body: some View {
-  VStack(alignment: .leading, spacing: 12) {
-   HStack {
-    Text(title)
-     .font(.headline)
-     .foregroundColor(.blackPrimary)
-    
-    Spacer()
-    
-    PriorityBadge(priority: priority, color: color)
+  ZStack {
+   VStack(alignment: .leading, spacing: 12) {
+    HStack {
+     // Completion Button
+     Button(action: {
+      withAnimation(.easeInOut(duration: 0.3)) {
+       isCompleted.toggle()
+       if isCompleted {
+        showConfetti = true
+        // Hide confetti after animation completes (1.2s lifetime + 0.2s buffer)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+         showConfetti = false
+        }
+       }
+      }
+     }) {
+      Image(systemName: isCompleted ? "checkmark.circle.fill" : "circle")
+       .font(.title3)
+       .foregroundColor(isCompleted ? .myGreen : .textSecondary)
+     }
+     .buttonStyle(.plain)
+
+     Text(title)
+      .font(.headline)
+      .foregroundColor(.blackPrimary)
+      .strikethrough(isCompleted)
+      .opacity(isCompleted ? 0.5 : 1.0)
+
+     Spacer()
+
+     PriorityBadge(priority: priority, color: color)
+    }
+
+    Text(description)
+     .font(.subheadline)
+     .foregroundColor(.textSecondary)
+     .lineLimit(2)
+     .strikethrough(isCompleted)
+     .opacity(isCompleted ? 0.5 : 1.0)
+
+    HStack {
+     HStack(spacing: 6) {
+      Image(systemName: "calendar")
+       .font(.caption)
+       .foregroundColor(.textSecondary)
+
+      Text(dueDate)
+       .font(.caption)
+       .foregroundColor(.textSecondary)
+     }
+
+     Spacer()
+
+     Button(action: {}) {
+      Image(systemName: "ellipsis")
+       .font(.caption)
+       .foregroundColor(.textSecondary)
+     }
+    }
    }
-   
-   Text(description)
-    .font(.subheadline)
-    .foregroundColor(.textSecondary)
-    .lineLimit(2)
-   
-   HStack {
-    HStack(spacing: 6) {
-     Image(systemName: "calendar")
-      .font(.caption)
-      .foregroundColor(.textSecondary)
-     
-     Text(dueDate)
-      .font(.caption)
-      .foregroundColor(.textSecondary)
-    }
-    
-    Spacer()
-    
-    Button(action: {}) {
-     Image(systemName: "ellipsis")
-      .font(.caption)
-      .foregroundColor(.textSecondary)
-    }
+   .padding()
+   .background(Color.white)
+   .cornerRadius(16)
+   .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
+   .opacity(isCompleted ? 0.6 : 1.0)
+
+   // Confetti overlay
+   if showConfetti {
+    ConfettiView()
    }
   }
-  .padding()
-  .background(Color.white)
-  .cornerRadius(16)
-  .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
  }
 }
 
