@@ -3,10 +3,9 @@ import SwiftUI
 struct HomeView: View {
  @State private var showQuickAdd = false
  @State private var quickAddText = ""
+ @State private var showCreationConfetti = false
  @FocusState private var isInputFocused: Bool
- @State private var card1Completed: Int = 0
- @State private var card2Completed: Int = 0
- @State private var card3Completed: Int = 0
+ @EnvironmentObject var taskManager: TaskManager
  var formattedDate: String {
   let dateFormatter = DateFormatter()
   dateFormatter.dateFormat = "dd MMM"
@@ -14,6 +13,7 @@ struct HomeView: View {
  }
  
  var body: some View {
+  ZStack {
    ScrollView {
     // Welcome back message
     VStack{
@@ -84,14 +84,22 @@ struct HomeView: View {
     
     
     
-    // Add To-dos Prompt Card
-    VStack{
-     AddTodosCard(totalCount: 2, completedCount: $card1Completed)
-     AddTodosCard(totalCount: 0, completedCount: $card2Completed)
-     AddTodosCard(totalCount: 10, completedCount: $card3Completed)
-    }
+
+    // Display Added Tasks
+    if !taskManager.tasks.isEmpty {
+     VStack(alignment: .leading, spacing: 12) {
+      Text("Your Tasks")
+       .font(.headline)
+       .foregroundColor(.blackPrimary)
+       .padding(.horizontal)
+
+      ForEach($taskManager.tasks) { $task in
+       TaskCard(task: $task)
+      }
+     }
      .padding(.horizontal)
      .padding(.bottom, 40)
+    }
     
     
     
@@ -136,37 +144,67 @@ struct HomeView: View {
 
    // Input Accessory Overlay above Keyboard
    if showQuickAdd {
-    VStack(spacing: 0) {
-     // Dimmed background when input is active
+    ZStack {
+     // Dismiss background
      Color.black.opacity(0.3)
       .ignoresSafeArea()
       .onTapGesture {
-       withAnimation(.easeInOut(duration: 0.2)) {
+       withAnimation(.easeInOut(duration: 0.25)) {
         showQuickAdd = false
        }
       }
 
-     // Quick Add View positioned above keyboard
-     QuickAddTaskView(
-      isPresented: $showQuickAdd,
-      taskText: $quickAddText,
-      onAddTask: addTask
-     )
-     .presentationDetents([.height(150)])
-//     .presentationDragIndicator(.visible)
+     VStack(spacing: 0) {
+      Spacer()
+
+      // Quick Add View positioned above keyboard
+      QuickAddTaskView(
+       isPresented: $showQuickAdd,
+       taskText: $quickAddText,
+       onAddTask: addTask
+      )
+      .presentationDetents([.height(150)])
+     }
+     .ignoresSafeArea(.keyboard)
     }
    }
-  
+
+   // Confetti overlay for task creation
+   if showCreationConfetti {
+    ConfettiView()
+   }
+  }
  }
  
 
  private func addTask() {
-  let task = quickAddText.trimmingCharacters(in: .whitespaces)
-  if !task.isEmpty {
-   // TODO: Add task to your data model
-   print("Task added: \(task)")
+  let taskTitle = quickAddText.trimmingCharacters(in: .whitespaces)
+  if !taskTitle.isEmpty {
+   // Randomly select color and symbol
+   let colors = ["purple", "orange", "blue", "green", "red", "pink", "cyan", "yellow"]
+   let symbols = ["checkmark", "star.fill", "bolt.fill", "flame.fill", "heart.fill", "sparkles", "target", "gift.fill", "lightbulb.fill", "crown.fill"]
+
+   let randomColor = colors.randomElement() ?? "purple"
+   let randomSymbol = symbols.randomElement() ?? "checkmark"
+
+   // Create task with random color and symbol
+   var newTask = Task(title: taskTitle)
+   newTask.taskColor = randomColor
+   newTask.taskSymbol = randomSymbol
+   taskManager.addTask(newTask)
+
    quickAddText = ""
    showQuickAdd = false
+
+   // Trigger creation confetti
+   withAnimation {
+    showCreationConfetti = true
+   }
+
+   // Hide confetti after animation completes (2.0s for premium glow + 0.2s buffer)
+   DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
+    showCreationConfetti = false
+   }
   }
  }
 }
@@ -208,7 +246,7 @@ struct StatCard: View {
 struct TaskRow: View {
  let title: String
  let time: String
- @State private var isCompleted: Bool = false
+ @Binding var isCompleted: Bool
  @State private var showConfetti: Bool = false
 
  var body: some View {

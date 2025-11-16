@@ -2,6 +2,7 @@ import SwiftUI
 import Foundation
 
 struct MainView: View {
+ @StateObject private var taskManager = TaskManager()
 
  var todayNumberSymbol: String {
   let day = Calendar.autoupdatingCurrent.component(.day, from: Date())
@@ -55,6 +56,7 @@ struct MainView: View {
 //    }
 //   }
    .tabBarMinimizeBehavior(.onScrollDown)
+   .environmentObject(taskManager)
  }
 }
 #Preview {

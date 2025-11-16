@@ -1,14 +1,18 @@
 import SwiftUI
 
 struct TaskDetailsView: View {
+ @EnvironmentObject var taskManager: TaskManager
  @State private var taskTitle = ""
- 
+ @State private var taskColor: String = "purple"
+ @State private var taskSymbol: String = "checkmark"
+
  @Binding var isPresented: Bool
  let taskText: String
  @Environment(\.dismiss) private var dismiss
  @State private var selectedTimeOfDay = "Morning"
  @State private var duration = "30m"
- @State private var subTasks: [String] = []
+ @State private var subTasksCount: Int = 0
+ @State private var subTasksCompleted: Int = 0
  @State private var notes = ""
  @State private var showSuggestBreakdown = false
  @State private var sliderValue: Double = 0
@@ -16,6 +20,24 @@ struct TaskDetailsView: View {
  @State private var showStoryPointsInfo: Bool = false
  @State private var showStoryPointsPicker: Bool = false
  @State private var showMoreOptions: Bool = false
+ @State private var showColorSymbolPicker: Bool = false
+
+ private let availableColors = ["purple", "orange", "blue", "green", "red", "pink", "cyan", "yellow"]
+ private let commonSymbols = ["checkmark", "star.fill", "bolt.fill", "flame.fill", "heart.fill", "sparkles", "target", "gift.fill", "lightbulb.fill", "crown.fill"]
+
+ private func getColorValue(_ colorName: String) -> Color {
+  switch colorName {
+  case "purple": return .myPurple
+  case "orange": return .orange
+  case "blue": return .blue
+  case "green": return .myGreen
+  case "red": return .myRed
+  case "pink": return .pink
+  case "cyan": return .cyan
+  case "yellow": return .yellow
+  default: return .myPurple
+  }
+ }
  
 	private enum SchedulingMode {
 		case timeOfDaySlider
@@ -83,14 +105,23 @@ struct TaskDetailsView: View {
         }
         .foregroundColor(.gray)
        }
-       
+
        TextField("", text: $taskTitle, axis: .vertical)
       }
-      
+
       Spacer()
-      Circle()
-       .fill(Color.myPurple)
-       .frame(width: 38, height: 38)
+      Button(action: { showColorSymbolPicker = true }) {
+       ZStack {
+        Circle()
+         .fill(getColorValue(taskColor))
+         .frame(width: 38, height: 38)
+
+        Image(systemName: taskSymbol)
+         .font(.body.weight(.semibold))
+         .foregroundColor(.white)
+       }
+      }
+      .buttonStyle(.plain)
      }
     }
     
@@ -346,9 +377,9 @@ struct TaskDetailsView: View {
       HStack {
        Text("Sub-tasks")
         .font(.system(size: 16, weight: .semibold))
-       
+
        Spacer()
-       
+
        Button(action: { showSuggestBreakdown = true }) {
         HStack(spacing: 6) {
          Text("SUGGEST BREAKDOWN")
@@ -360,33 +391,110 @@ struct TaskDetailsView: View {
        }
       }
       .buttonStyle(.glass)
-      
-      VStack(alignment: .leading, spacing: 8){
-       ForEach(subTasks.indices, id: \.self) { index in
-        HStack(spacing: 8) {
-         Image("circle")
-          .foregroundStyle(.textSecondary)
-         
-         TextField("Add", text: Binding(
-          get: { subTasks[index] },
-          set: { subTasks[index] = $0 }
-         ))
-          .font(.system(size: 16, weight: .regular))
-          .onChange(of: subTasks[index]) { _, newValue in
-           if index == subTasks.count - 1 &&
-               !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            subTasks.append("")
+
+      // Sub-tasks Counter
+      if subTasksCount > 0 {
+       ZStack {
+        VStack(spacing: 0) {
+         HStack(spacing: 12) {
+          ZStack {
+           Circle()
+            .fill(subTasksCompleted >= subTasksCount ? Color.myGreen.opacity(0.2) : Color.yellow.opacity(0.2))
+            .frame(width: 36, height: 36)
+
+           Image(systemName: subTasksCompleted >= subTasksCount ? "checkmark" : "\(subTasksCount)")
+            .font(.body.bold())
+            .foregroundColor(subTasksCompleted >= subTasksCount ? .myGreen : .yellow)
+          }
+
+          VStack(alignment: .leading, spacing: 4) {
+           Text("Add your sub-tasks")
+            .font(.body)
+            .strikethrough(subTasksCompleted >= subTasksCount)
+            .foregroundColor(subTasksCompleted >= subTasksCount ? .gray : .primary)
+
+           Text("\(subTasksCompleted) / \(subTasksCount) completed")
+            .font(.caption)
+            .foregroundColor(.textSecondary)
+          }
+
+          Spacer()
+
+          Button(action: {
+           if subTasksCompleted < subTasksCount {
+            withAnimation(.easeInOut(duration: 0.3)) {
+             subTasksCompleted += 1
+            }
+           }
+          }) {
+           ZStack {
+            Circle()
+             .stroke(Color.blackPrimary.opacity(0.3), lineWidth: 2)
+             .frame(width: 28, height: 28)
+
+            if subTasksCompleted < subTasksCount {
+             Image(systemName: "plus")
+              .font(.caption.weight(.semibold))
+              .foregroundColor(.blackPrimary)
+            }
            }
           }
-        }
-        Divider()
+          .disabled(subTasksCompleted >= subTasksCount)
+         }
+         .padding(.horizontal)
 
+         if subTasksCount > 0 {
+          Divider()
+           .opacity(0.06)
+
+          HStack {
+           GeometryReader { geo in
+            ZStack(alignment: .leading) {
+             Capsule()
+              .fill(Color.black.opacity(0.06))
+              .frame(height: 8)
+
+             Capsule()
+              .fill(Color.myGreen.opacity(0.8))
+              .frame(width: geo.size.width * Double(subTasksCompleted) / Double(subTasksCount), height: 8)
+            }
+           }
+           .frame(height: 8)
+           .frame(maxWidth: 50)
+
+           Text("\(subTasksCompleted) / \(subTasksCount)")
+            .font(.caption.bold())
+            .foregroundColor(.gray)
+
+           Spacer()
+
+           Image(systemName: "chevron.down")
+            .font(.caption.bold())
+            .foregroundColor(.gray)
+          }
+          .padding(.horizontal)
+          .padding(.vertical, 8)
+         }
+        }
+        .padding(.vertical, 8)
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 14))
        }
       }
-      .onAppear {
-       if subTasks.isEmpty {
-        subTasks = [""]
+
+      // Button to add sub-tasks
+      Button(action: {
+       if subTasksCount < 10 {
+        subTasksCount += 1
        }
+      }) {
+       HStack(spacing: 8) {
+        Image(systemName: "plus.circle.fill")
+         .foregroundColor(.orange)
+        Text(subTasksCount == 0 ? "Add sub-tasks" : "Add another sub-task")
+         .foregroundColor(.blackPrimary)
+       }
+       .font(.body)
+       .padding(.vertical, 8)
       }
      }
     }
@@ -423,6 +531,11 @@ struct TaskDetailsView: View {
    .navigationTitle("Add task")
    .navigationBarBackButtonHidden()
    .navigationBarTitleDisplayMode(.inline)
+   .onAppear {
+    if taskTitle.isEmpty && !taskText.isEmpty {
+     taskTitle = taskText
+    }
+   }
    
    .toolbar {
     ToolbarItem(placement: .topBarLeading) {
@@ -432,25 +545,41 @@ struct TaskDetailsView: View {
     }
     ToolbarItem(placement: .topBarTrailing) {
      Button{
-      
+      saveTask()
      } label: {
       Image(systemName: "checkmark")
+       .fontWeight(.semibold)
      }
+     .disabled(taskTitle.trimmingCharacters(in: .whitespaces).isEmpty)
     }
-    
-    
-    
    }
-   
+   .sheet(isPresented: $showColorSymbolPicker) {
+    ColorSymbolPickerView(taskColor: $taskColor, taskSymbol: $taskSymbol, getColorValue: getColorValue)
+   }
+
+  }
+
+ }
+
+ private func saveTask() {
+  let title = taskTitle.trimmingCharacters(in: .whitespaces)
+  if !title.isEmpty {
+   var newTask = Task(title: title)
+   newTask.taskColor = taskColor
+   newTask.taskSymbol = taskSymbol
+   taskManager.addTask(newTask)
+   dismiss()
   }
  }
 }
 
 #Preview("Default") {
  TaskDetailsView(isPresented: .constant(true), taskText: "Make a cake")
+  .environmentObject(TaskManager())
 }
 
 #Preview("Long title • Dark Mode") {
  TaskDetailsView(isPresented: .constant(true), taskText: "Bake a triple-layer chocolate cake with ganache and decorations")
+  .environmentObject(TaskManager())
   .environment(\.colorScheme, .dark)
 }

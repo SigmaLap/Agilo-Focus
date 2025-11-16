@@ -3,33 +3,57 @@ import AVFoundation
 
 struct ConfettiView: View {
  @State private var confettiParticles: [ConfettiParticleData] = []
- @State private var isAnimating: Bool = false
+ @State private var premiumParticles: [PremiumParticleData] = []
  @State private var audioPlayer: AVAudioPlayer?
 
  var body: some View {
   TimelineView(.animation) { timeline in
    let now = timeline.date
    ZStack {
-    ForEach(confettiParticles) { particle in
+    // Premium glow particles (background)
+    ForEach(premiumParticles) { particle in
      let elapsed = now.timeIntervalSince(particle.createdAt)
-     let lifetime = 1.2 // Shorter lifetime - 1.2 seconds total
+     let lifetime = 2.0
      let t = min(max(elapsed / lifetime, 0), 1)
 
-     // Slow upward float (first 60%)
-     let floatPhase = min(t / 0.6, 1.0)
-     let floatDistance = particle.upwardVelocity * CGFloat(floatPhase)
+     // Premium glow burst
+     let distance = particle.glowVelocity * CGFloat(t)
+     let angle = particle.glowAngle
+     let x = distance * cos(angle)
+     let y = distance * sin(angle)
 
-     // Settling phase (last 40% - gentle slowdown)
-     let settlePhase = max((t - 0.6) / 0.4, 0)
-     let settleDistance = floatDistance * (1 - settlePhase * settlePhase * 0.5)
+     // Fade effect
+     let opacity = max(0, 1 - t) * 0.6
 
-     // Narrow horizontal drift for elegance
-     let horizontalSpread = particle.horizontalOffset * CGFloat(min(t * 0.8, 1.0))
+     Circle()
+      .fill(particle.glowColor)
+      .frame(width: particle.glowSize, height: particle.glowSize)
+      .opacity(opacity)
+      .blur(radius: 2)
+      .offset(x: x, y: y)
+    }
 
-     // Smooth fade throughout, more pronounced at end
-     let opacity = max(0, 1 - t * t * 1.2)
+    // Regular confetti particles (foreground)
+    ForEach(confettiParticles) { particle in
+     let elapsed = now.timeIntervalSince(particle.createdAt)
+     let lifetime = 1.5
+     let t = min(max(elapsed / lifetime, 0), 1)
 
+     // Energetic burst outward from center
+     let distance = particle.burstVelocity * CGFloat(t)
+     let angle = particle.burstAngle
+     let x = distance * cos(angle)
+     let y = distance * sin(angle)
+
+     // Gravity effect in second half
+     let gravityPhase = max((t - 0.5) / 0.5, 0)
+     let gravityOffset = gravityPhase * gravityPhase * 200
+
+     // Spinning rotation
      let rotation = Angle(degrees: particle.initialRotation + particle.rotationSpeed * elapsed)
+
+     // Fade out at the end
+     let opacity = max(0, 1 - (t - 0.7) * 3)
 
      ConfettiShapeView(
       type: particle.shapeType,
@@ -38,12 +62,15 @@ struct ConfettiView: View {
      )
      .opacity(opacity)
      .rotationEffect(rotation)
-     .offset(x: horizontalSpread, y: -settleDistance)
+     .offset(x: x, y: y + gravityOffset)
     }
    }
    .onChange(of: now) { _, _ in
     confettiParticles.removeAll {
-     now.timeIntervalSince($0.createdAt) > 1.2 // Match lifetime
+     now.timeIntervalSince($0.createdAt) > 1.5
+    }
+    premiumParticles.removeAll {
+     now.timeIntervalSince($0.createdAt) > 2.0
     }
    }
   }
@@ -51,6 +78,7 @@ struct ConfettiView: View {
   .ignoresSafeArea()
   .onAppear {
    triggerConfetti()
+   triggerPremiumGlow()
    playFinishSound()
   }
  }
@@ -63,51 +91,76 @@ struct ConfettiView: View {
 
   do {
    audioPlayer = try AVAudioPlayer(contentsOf: url)
-   audioPlayer?.volume = 0.3 // Set volume to 30% (range: 0.0 to 1.0)
+   audioPlayer?.volume = 0.05 // Much quieter - 5% volume
    audioPlayer?.play()
   } catch {
    print("Error playing sound: \(error.localizedDescription)")
   }
  }
 
+ private func triggerPremiumGlow() {
+  // Premium glow colors (translucent, premium look)
+  let glowColors: [Color] = [
+   Color.blue.opacity(0.4),
+   Color.purple.opacity(0.4),
+   Color.pink.opacity(0.4),
+   Color.cyan.opacity(0.4),
+   Color.yellow.opacity(0.3),
+  ]
+
+  // Create 30 premium glow particles for premium effect
+  for _ in 0..<30 {
+   let glowColor = glowColors.randomElement() ?? Color.blue.opacity(0.4)
+
+   // Burst outward in all directions from center
+   let angle = Double.random(in: 0...(2 * .pi))
+   let glowVelocity = CGFloat.random(in: 100...250)
+
+   let particle = PremiumParticleData(
+    glowColor: glowColor,
+    glowSize: CGFloat.random(in: 20...50),
+    glowVelocity: glowVelocity,
+    glowAngle: angle,
+    createdAt: Date()
+   )
+   premiumParticles.append(particle)
+  }
+ }
+
  private func triggerConfetti() {
   let shapeTypes: [ConfettiShapeType] = [
-   .star, .circle, .rectangle, .star
+   .star, .circle, .square, .diamond
   ]
 
-  // Premium color palette - elegant and sophisticated
+  // Vibrant, energetic colors - premium palette
   let colors: [Color] = [
-   Color(red: 1.0, green: 0.95, blue: 0.9),     // Champagne
-   Color(red: 0.95, green: 0.85, blue: 0.9),    // Rose gold
-   Color(red: 1.0, green: 0.92, blue: 0.7),     // Light gold
-   Color(red: 0.96, green: 0.88, blue: 0.88),   // Warm beige
-   Color(red: 1.0, green: 0.98, blue: 0.95),    // Ivory
-   Color(red: 0.99, green: 0.92, blue: 0.85)    // Soft taupe
+   Color(red: 0.4, green: 0.8, blue: 1.0),     // Bright cyan
+   Color(red: 0.8, green: 0.2, blue: 0.8),     // Bright magenta
+   Color(red: 1.0, green: 0.4, blue: 0.6),     // Coral pink
+   Color(red: 0.6, green: 0.8, blue: 1.0),     // Sky blue
+   Color(red: 1.0, green: 0.8, blue: 0.2),     // Gold
+   Color(red: 0.2, green: 1.0, blue: 0.6),     // Mint
+   Color(red: 1.0, green: 0.3, blue: 0.3),     // Crimson
+   Color(red: 0.6, green: 0.4, blue: 1.0)      // Violet
   ]
 
-  // Create 20 confetti particles - elegant, not overwhelming
-  for _ in 0..<20 {
+  // Create 60 particles for premium energetic burst
+  for _ in 0..<60 {
    let shapeType = shapeTypes.randomElement() ?? .circle
-   let color = colors.randomElement() ?? .white
+   let color = colors.randomElement() ?? Color.blue
 
-   // Narrow horizontal spread for refined feel
-   let horizontalOffset = CGFloat.random(in: -50...50)
-
-   // Slow, graceful upward float
-   let upwardVelocity = CGFloat.random(in: 300...450)
-
-   // Not used in new physics, kept for data model compatibility
-   let downwardVelocity = CGFloat.random(in: 0...0)
+   // Burst outward in all directions from center
+   let angle = Double.random(in: 0...(2 * .pi))
+   let burstVelocity = CGFloat.random(in: 200...450)
 
    let particle = ConfettiParticleData(
     shapeType: shapeType,
     color: color,
-    size: CGFloat.random(in: 4...10),  // Smaller, more refined
+    size: CGFloat.random(in: 6...18),
     initialRotation: Double.random(in: 0...360),
-    rotationSpeed: Double.random(in: -120...120),  // Slower rotation
-    horizontalOffset: horizontalOffset,
-    upwardVelocity: upwardVelocity,
-    downwardVelocity: downwardVelocity,
+    rotationSpeed: Double.random(in: 300...720),
+    burstAngle: angle,
+    burstVelocity: burstVelocity,
     createdAt: Date()
    )
    confettiParticles.append(particle)
@@ -119,7 +172,8 @@ struct ConfettiView: View {
 enum ConfettiShapeType {
  case star
  case circle
- case rectangle
+ case square
+ case diamond
 }
 
 // MARK: - Confetti Shape View
@@ -140,10 +194,15 @@ struct ConfettiShapeView: View {
     .fill(color)
     .frame(width: size, height: size)
 
-  case .rectangle:
-   RoundedRectangle(cornerRadius: size * 0.25)
+  case .square:
+   RoundedRectangle(cornerRadius: size * 0.15)
     .fill(color)
-    .frame(width: size * 1.2, height: size * 0.6)
+    .frame(width: size, height: size)
+
+  case .diamond:
+   Image(systemName: "diamond.fill")
+    .font(.system(size: size * 0.9, weight: .semibold))
+    .foregroundColor(color)
   }
  }
 }
@@ -155,10 +214,19 @@ struct ConfettiParticleData: Identifiable {
  let color: Color
  let size: CGFloat
  let initialRotation: Double
- let rotationSpeed: Double // degrees per second
- let horizontalOffset: CGFloat // slight horizontal spread
- let upwardVelocity: CGFloat // fast upward speed (pixels)
- let downwardVelocity: CGFloat // slow downward speed (pixels)
+ let rotationSpeed: Double
+ let burstAngle: Double
+ let burstVelocity: CGFloat
+ let createdAt: Date
+}
+
+// MARK: - Premium Glow Particle Data Model
+struct PremiumParticleData: Identifiable {
+ let id = UUID()
+ let glowColor: Color
+ let glowSize: CGFloat
+ let glowVelocity: CGFloat
+ let glowAngle: Double
  let createdAt: Date
 }
 

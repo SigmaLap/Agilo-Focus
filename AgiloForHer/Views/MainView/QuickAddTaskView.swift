@@ -15,11 +15,10 @@ struct QuickAddTaskView: View {
    HStack {
     TextField("Stay On Track", text: $taskText)
      .font(.system(size: 18, weight: .regular))
-     .foregroundColor(.textSecondary)
      .padding(.horizontal, 16)
      .padding(.vertical, 12)
-     .background(Color.white)
-     .cornerRadius(12)
+     .background(.ultraThinMaterial)
+     .cornerRadius(20)
      .focused($isInputFocused)
    }
    .padding(.horizontal, 16)
@@ -34,11 +33,10 @@ struct QuickAddTaskView: View {
       Text("ANYTIME")
        .font(.system(size: 11, weight: .semibold))
      }
-     .foregroundColor(.blackPrimary)
-     .padding(.horizontal, 12)
+     .padding(.horizontal, 16)
      .padding(.vertical, 8)
-     .background(Color.white)
-     .cornerRadius(8)
+     .background(.ultraThinMaterial)
+     .cornerRadius(20)
     }
 
     Button(action: {}) {
@@ -48,44 +46,44 @@ struct QuickAddTaskView: View {
       Text("NO")
        .font(.system(size: 11, weight: .semibold))
      }
-     .foregroundColor(.blackPrimary)
-     .padding(.horizontal, 12)
+     .padding(.horizontal, 16)
      .padding(.vertical, 8)
-     .background(Color.white)
-     .cornerRadius(8)
+     .background(.ultraThinMaterial)
+     .cornerRadius(20)
+
     }
 
     Button(action: { showTaskDetails = true }) {
      Image(systemName: "ellipsis")
       .font(.caption)
-      .foregroundColor(.blackPrimary)
-      .padding(.horizontal, 12)
+      .padding(.horizontal, 16)
       .padding(.vertical, 8)
-      .background(Color.white)
-      .cornerRadius(8)
+      .background(.ultraThinMaterial)
+      .cornerRadius(20)
+
     }
 
     Spacer()
 
     Button(action: onAddTask) {
      HStack(spacing: 6) {
-      Image(systemName: "waveform")
+      Image(systemName: "checkmark")
        .font(.caption2)
-      Text("Speak")
+      Text("Done")
        .font(.system(size: 11, weight: .semibold))
      }
-     .foregroundColor(.white)
      .padding(.horizontal, 16)
      .padding(.vertical, 8)
-     .background(Color.blackPrimary)
+     .background(.ultraThinMaterial)
      .cornerRadius(20)
     }
    }
    .padding(.horizontal, 16)
-   .padding(.bottom, 12)
+   .padding(.bottom, 25)
   }
   .padding(.vertical, 0)
-  .background(Color(red: 0.95, green: 0.95, blue: 0.97))
+  .background(.ultraThinMaterial)
+  .offset(y: 15)
   .onAppear {
    isInputFocused = true
   }
