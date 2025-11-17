@@ -13,11 +13,8 @@ struct ColorSymbolPickerView: View {
   NavigationStack {
    Form {
     // MARK: - Color Section
-    Section("Color") {
+    Section{
      VStack(spacing: 12) {
-      Text("Choose a color for your task")
-       .font(.body)
-       .foregroundColor(.textSecondary)
 
       ColorGridView(
        selectedColor: $taskColor,
@@ -25,16 +22,19 @@ struct ColorSymbolPickerView: View {
        getColorValue: taskManager.getTaskColor(colorString:)
       )
      }
+    } header: {
+     Text("Color")
+      .fontDesign(.serif)
+      .font(.headline)
+      .foregroundColor(.primary)
+      .bold()
     }
     .listRowSeparator(.hidden)
 
     // MARK: - Symbol Section
-    Section("Icon") {
-     VStack(spacing: 12) {
-      Text("Choose an icon for your task")
-       .font(.body)
-       .foregroundColor(.textSecondary)
-
+    Section {
+     VStack(alignment: .leading, spacing: 12) {
+      
       SymbolGridView(
        selectedSymbol: $taskSymbol,
        symbols: commonSymbols,
@@ -43,6 +43,14 @@ struct ColorSymbolPickerView: View {
       )
      }
     }
+    header: {
+     Text("Icon")
+      .fontDesign(.serif)
+      .font(.headline)
+      .foregroundColor(.primary)
+      .bold()
+    }
+    
     .listRowSeparator(.hidden)
 
     // MARK: - Preview Section
@@ -53,6 +61,14 @@ struct ColorSymbolPickerView: View {
       getColorValue: taskManager.getTaskColor(colorString:)
      )
     }
+    header: {
+     Text("Preview")
+      .fontDesign(.serif)
+      .font(.headline)
+      .foregroundColor(.primary)
+      .bold()
+    }
+    
     .listRowSeparator(.hidden)
    }
    .navigationTitle("Customize Task")
@@ -75,38 +91,24 @@ private struct ColorGridView: View {
  let colors: [String]
  let getColorValue: (String) -> Color
 
- private let columnsPerRow = 4
-
  var body: some View {
-  VStack(spacing: 12) {
-   ForEach(0..<rowCount, id: \.self) { row in
-    HStack(spacing: 12) {
-     ForEach(0..<columnsPerRow, id: \.self) { col in
-      let index = row * columnsPerRow + col
-
-      if index < colors.count {
-       ColorButtonView(
-        color: colors[index],
-        isSelected: selectedColor == colors[index],
-        getColorValue: getColorValue,
-        action: {
-         withAnimation(.easeInOut(duration: 0.15)) {
-          selectedColor = colors[index]
-         }
-        }
-       )
-      } else {
-       Color.clear
-        .frame(height: 60)
+  ScrollView(.horizontal, showsIndicators: false) {
+   HStack(spacing: 20) {
+    ForEach(colors, id: \.self) { color in
+     ColorButtonView(
+      color: color,
+      isSelected: selectedColor == color,
+      getColorValue: getColorValue,
+      action: {
+       withAnimation(.easeInOut(duration: 0.15)) {
+        selectedColor = color
+       }
       }
-     }
+     )
     }
    }
+   .padding(.horizontal, 12)
   }
- }
-
- private var rowCount: Int {
-  (colors.count + columnsPerRow - 1) / columnsPerRow
  }
 }
 
@@ -146,38 +148,24 @@ private struct SymbolGridView: View {
  let taskColor: String
  let getColorValue: (String) -> Color
 
- private let columnsPerRow = 5
-
  var body: some View {
-  VStack(spacing: 12) {
-   ForEach(0..<rowCount, id: \.self) { row in
-    HStack(spacing: 12) {
-     ForEach(0..<columnsPerRow, id: \.self) { col in
-      let index = row * columnsPerRow + col
-
-      if index < symbols.count {
-       SymbolButtonView(
-        symbol: symbols[index],
-        isSelected: selectedSymbol == symbols[index],
-        accentColor: getColorValue(taskColor),
-        action: {
-         withAnimation(.easeInOut(duration: 0.15)) {
-          selectedSymbol = symbols[index]
-         }
-        }
-       )
-      } else {
-       Color.clear
-        .frame(height: 50)
+  ScrollView(.horizontal, showsIndicators: false) {
+   HStack(spacing: 16) {
+    ForEach(symbols, id: \.self) { symbol in
+     SymbolButtonView(
+      symbol: symbol,
+      isSelected: selectedSymbol == symbol,
+      accentColor: getColorValue(taskColor),
+      action: {
+       withAnimation(.easeInOut(duration: 0.15)) {
+        selectedSymbol = symbol
+       }
       }
-     }
+     )
     }
    }
+   .padding(.horizontal, 12)
   }
- }
-
- private var rowCount: Int {
-  (symbols.count + columnsPerRow - 1) / columnsPerRow
  }
 }
 
@@ -212,9 +200,6 @@ private struct PreviewView: View {
 
  var body: some View {
   VStack(spacing: 12) {
-   Text("Preview")
-    .font(.headline)
-
    ZStack {
     Circle()
      .fill(getColorValue(taskColor).opacity(0.2))
