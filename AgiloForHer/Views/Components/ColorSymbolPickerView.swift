@@ -91,24 +91,38 @@ private struct ColorGridView: View {
  let colors: [String]
  let getColorValue: (String) -> Color
 
+ private let columnsPerRow = 4
+
  var body: some View {
-  ScrollView(.horizontal, showsIndicators: false) {
-   HStack(spacing: 20) {
-    ForEach(colors, id: \.self) { color in
-     ColorButtonView(
-      color: color,
-      isSelected: selectedColor == color,
-      getColorValue: getColorValue,
-      action: {
-       withAnimation(.easeInOut(duration: 0.15)) {
-        selectedColor = color
-       }
+  VStack(spacing: 16) {
+   ForEach(0..<rowCount, id: \.self) { row in
+    HStack(spacing: 30) {
+     ForEach(0..<columnsPerRow, id: \.self) { col in
+      let index = row * columnsPerRow + col
+
+      if index < colors.count {
+       ColorButtonView(
+        color: colors[index],
+        isSelected: selectedColor == colors[index],
+        getColorValue: getColorValue,
+        action: {
+         withAnimation(.easeInOut(duration: 0.15)) {
+          selectedColor = colors[index]
+         }
+        }
+       )
+      } else {
+       Color.clear
+        .frame(height: 60)
       }
-     )
+     }
     }
    }
-   .padding(.horizontal, 12)
   }
+ }
+
+ private var rowCount: Int {
+  (colors.count + columnsPerRow - 1) / columnsPerRow
  }
 }
 
@@ -148,24 +162,38 @@ private struct SymbolGridView: View {
  let taskColor: String
  let getColorValue: (String) -> Color
 
+ private let columnsPerRow = 5
+
  var body: some View {
-  ScrollView(.horizontal, showsIndicators: false) {
-   HStack(spacing: 16) {
-    ForEach(symbols, id: \.self) { symbol in
-     SymbolButtonView(
-      symbol: symbol,
-      isSelected: selectedSymbol == symbol,
-      accentColor: getColorValue(taskColor),
-      action: {
-       withAnimation(.easeInOut(duration: 0.15)) {
-        selectedSymbol = symbol
-       }
+  VStack(spacing: 12) {
+   ForEach(0..<rowCount, id: \.self) { row in
+    HStack(spacing: 12) {
+     ForEach(0..<columnsPerRow, id: \.self) { col in
+      let index = row * columnsPerRow + col
+
+      if index < symbols.count {
+       SymbolButtonView(
+        symbol: symbols[index],
+        isSelected: selectedSymbol == symbols[index],
+        accentColor: getColorValue(taskColor),
+        action: {
+         withAnimation(.easeInOut(duration: 0.15)) {
+          selectedSymbol = symbols[index]
+         }
+        }
+       )
+      } else {
+       Color.clear
+        .frame(height: 50)
       }
-     )
+     }
     }
    }
-   .padding(.horizontal, 12)
   }
+ }
+
+ private var rowCount: Int {
+  (symbols.count + columnsPerRow - 1) / columnsPerRow
  }
 }
 
