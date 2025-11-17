@@ -38,6 +38,7 @@ struct AgiloForHer: App {
    //     }
    //    } else {
    MainView()
+    .modelContainer(for: [Task.self, SubTask.self, DailyEnergy.self])
    //    }
   }
   //  .modelContainer(persistence.container)
